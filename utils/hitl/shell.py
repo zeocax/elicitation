@@ -110,22 +110,32 @@ class HITLShell:
             if request.type == RequestType.FEEDBACK:
                 self.console.print("\n[bold cyan]Your feedback:[/bold cyan]")
                 self.console.print(Text("• Press Enter for new line", style="dim"))
-                self.console.print(Text("• Press Ctrl+D (Unix/Mac) or Ctrl+Z (Windows) when done", style="dim"))
-                self.console.print(Text("• Or type 'EOF' on a new line to submit\n", style="dim"))
+                self.console.print(Text("• Press Enter twice (empty line) to submit", style="dim"))
+                self.console.print(Text("• Or press Ctrl+D to submit\n", style="dim"))
                 
                 lines = []
                 line_num = 1
+                empty_line_count = 0
                 try:
                     while True:
                         # Show line number for better UX
                         line = input(f"[{line_num}] ")
-                        if line == "EOF":
-                            break
+                        
+                        # Check for double Enter (empty line)
+                        if line == "":
+                            empty_line_count += 1
+                            if empty_line_count >= 1 and len(lines) > 0:
+                                # Remove the last empty line from lines if it was added
+                                break
+                            elif len(lines) == 0:
+                                # If no content yet, reset counter and continue
+                                empty_line_count = 0
+                                continue
+                        else:
+                            empty_line_count = 0
                         
                         # Clean up any Unicode surrogates in the line
-                        # This can happen when inputting and deleting Chinese characters
-                        
-                        line = line.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+                        line = line.encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')
                         
                         lines.append(line)
                         line_num += 1
@@ -139,7 +149,7 @@ class HITLShell:
                 # This can happen when inputting and deleting Chinese characters
                 
                     
-                value = value.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+                value = value.encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')
                 
                 if value.strip():
                     self.console.print(f"\n[green]Received {len(lines)} lines of feedback[/green]")

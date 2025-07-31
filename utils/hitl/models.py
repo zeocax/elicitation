@@ -10,7 +10,7 @@ import uuid
 def clean_unicode_string(value: Any) -> Any:
     """Clean Unicode surrogates from strings that might cause encoding errors"""
     if isinstance(value, str):
-        return value.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+        return value.encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')
     elif isinstance(value, dict):
         return {k: clean_unicode_string(v) for k, v in value.items()}
     elif isinstance(value, list):
