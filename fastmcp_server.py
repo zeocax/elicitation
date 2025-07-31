@@ -13,7 +13,7 @@ mcp = FastMCP("Code Analyzer")
 # Register the list_file_status tool
 @mcp.tool
 async def list_file_status_tool(
-    directory: Annotated[Optional[str], "相对于项目根目录的路径，用于过滤特定目录下的文件。如果不提供，则列出所有已跟踪的文件"] = None
+    directory: Annotated[Optional[str], "需要查看审计状态的文件夹或者文件的绝对路径。"] = None
 ) -> str:
     """
     列出文件审计状态（返回Markdown表格）
