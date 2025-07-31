@@ -130,7 +130,7 @@ async def audit_architecture_consistency(
         
         # 输出thinking_content到hitl
         hitl = HITLClient()
-        hitl.notify(message=thinking_content, tool_name="audit_architecture_consistency")
+        await hitl.notify(message=thinking_content, tool_name="audit_architecture_consistency")
         
         # Count inconsistencies before asking for confirmation
         inconsistencies = audited_code.count("# INCONSISTENT:")

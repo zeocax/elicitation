@@ -21,16 +21,13 @@ async def main():
         print("No feedback received")
     
     # Example 2: Send notification without requiring feedback
-    success = await client.notify(
+    await client.notify(
         message="Code generation completed successfully! 5 files were created.",
         tool_name="CodeGenerator",
         context={"files_created": 5, "total_lines": 500}
     )
     
-    if success:
-        print("Notification sent successfully")
-    else:
-        print("Failed to send notification")
+    print("Notification sent")
 
 
 if __name__ == "__main__":
