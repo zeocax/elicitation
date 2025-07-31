@@ -134,15 +134,6 @@ async def audit_architecture_consistency(
         
         # Count inconsistencies before asking for confirmation
         inconsistencies = audited_code.count("# INCONSISTENT:")
-        not_implemented = audited_code.count("raise NotImplementedError")
-        
-        # Request user confirmation through HITL
-        hitl = HITLClient()
-        
-        # Prepare preview (first 1000 characters)
-        preview = audited_code[:1000]
-        if len(audited_code) > 1000:
-            preview += f"\n\n... ({len(audited_code) - 1000} more characters)"
         
         # Write the audited code back to new_file
         try:
