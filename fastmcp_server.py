@@ -13,7 +13,7 @@ mcp = FastMCP("Code Analyzer")
 # Register the list_file_status tool
 @mcp.tool
 async def list_file_status_tool(
-    directory: Annotated[Optional[str], "需要查看审计状态的文件夹或者文件的绝对路径。"] = None
+    directory: Annotated[str, "需要查看审计状态的文件夹或者文件的绝对路径。"] = None
 ) -> str:
     """
     列出文件审计状态（返回Markdown表格）
@@ -35,7 +35,7 @@ async def list_file_status_tool(
 async def audit_architecture_consistency_tool(
     old_file: Annotated[str, "原框架代码文件的绝对路径（如PyTorch实现），作为审计的参考基准"],
     new_file: Annotated[str, "新框架代码文件的绝对路径（如Paddlepaddle实现），将被审计并修改以标记不一致之处"],
-    exemption_file: Annotated[Optional[str], "审计豁免规则文件的绝对路径，包含应该被豁免的审计规则"] = None
+    exemption_file: Annotated[str, "审计豁免规则文件的绝对路径，包含应该被豁免的审计规则"]
 ) -> str:
     """
     深度学习框架迁移一致性审计工具
