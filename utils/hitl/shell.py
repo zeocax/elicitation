@@ -121,6 +121,14 @@ class HITLShell:
                         line = input(f"[{line_num}] ")
                         if line == "EOF":
                             break
+                        
+                        # Clean up any Unicode surrogates in the line
+                        # This can happen when inputting and deleting Chinese characters
+                        try:
+                            line = line.encode('utf-8', errors='surrogatepass').decode('utf-8', errors='replace')
+                        except (UnicodeDecodeError, UnicodeEncodeError):
+                            line = line.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+                        
                         lines.append(line)
                         line_num += 1
                 except EOFError:
@@ -128,6 +136,16 @@ class HITLShell:
                     pass
                 
                 value = "\n".join(lines)
+                
+                # Clean up any Unicode surrogates that might be present
+                # This can happen when inputting and deleting Chinese characters
+                try:
+                    # Try to encode and decode to remove any surrogates
+                    value = value.encode('utf-8', errors='surrogatepass').decode('utf-8', errors='replace')
+                except UnicodeDecodeError:
+                    # If that fails, use a more aggressive approach
+                    value = value.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+                
                 if value.strip():
                     self.console.print(f"\n[green]Received {len(lines)} lines of feedback[/green]")
                 else:

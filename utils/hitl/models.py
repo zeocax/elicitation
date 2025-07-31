@@ -7,6 +7,23 @@ from datetime import datetime
 import uuid
 
 
+def clean_unicode_string(value: Any) -> Any:
+    """Clean Unicode surrogates from strings that might cause encoding errors"""
+    if isinstance(value, str):
+        try:
+            # Try to encode and decode to remove any surrogates
+            return value.encode('utf-8', errors='surrogatepass').decode('utf-8', errors='replace')
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            # If that fails, use a more aggressive approach
+            return value.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+    elif isinstance(value, dict):
+        return {k: clean_unicode_string(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [clean_unicode_string(item) for item in value]
+    else:
+        return value
+
+
 class RequestType(Enum):
     """Types of HITL requests"""
     FEEDBACK = "feedback"    # Request feedback from user
@@ -29,9 +46,9 @@ class HITLRequest:
         return {
             "id": self.id,
             "type": self.type.value,
-            "prompt": self.prompt,
+            "prompt": clean_unicode_string(self.prompt),
             "tool_name": self.tool_name,
-            "context": self.context,
+            "context": clean_unicode_string(self.context),
             "timeout": self.timeout,
             "created_at": self.created_at.isoformat()
         }
@@ -66,8 +83,8 @@ class HITLResponse:
         return {
             "request_id": self.request_id,
             "success": self.success,
-            "value": self.value,
-            "error": self.error,
+            "value": clean_unicode_string(self.value),
+            "error": clean_unicode_string(self.error),
             "responded_at": self.responded_at.isoformat()
         }
     
