@@ -59,6 +59,8 @@ class HITLServer:
     
     async def submit_request(self, request: HITLRequest) -> HITLResponse:
         """Submit a request and wait for response"""
+        print(f"[DEBUG] submit_request called with request_id: {request.id}")
+        
         # Create future for response
         future = asyncio.Future()
         
@@ -72,18 +74,24 @@ class HITLServer:
             expires_at=expires_at
         )
         self.pending_requests[request.id] = pending
+        print(f"[DEBUG] Request {request.id} added to pending requests")
+        print(f"[DEBUG] Current pending requests: {list(self.pending_requests.keys())}")
         
         # Add to queue for shell to process
         await self.request_queue.put(request)
+        print(f"[DEBUG] Request added to queue")
         
         try:
             # Wait for response with timeout
+            print(f"[DEBUG] Waiting for response with timeout: {request.timeout}s")
             response = await asyncio.wait_for(
                 future,
                 timeout=request.timeout
             )
+            print(f"[DEBUG] Got response for request {request.id}")
             return response
         except asyncio.TimeoutError:
+            print(f"[ERROR] Request {request.id} timed out after {request.timeout} seconds")
             # Remove from pending if timed out
             self.pending_requests.pop(request.id, None)
             return HITLResponse(
@@ -111,16 +119,27 @@ class HITLServer:
     
     async def submit_response(self, response: HITLResponse) -> bool:
         """Submit response for a request"""
+        print(f"[DEBUG] submit_response called for request_id: {response.request_id}")
+        print(f"[DEBUG] Current pending requests: {list(self.pending_requests.keys())}")
+        
         pending = self.pending_requests.get(response.request_id)
         if not pending:
+            print(f"[ERROR] Request {response.request_id} not found in pending requests")
+            print(f"[ERROR] Available request IDs: {list(self.pending_requests.keys())}")
             return False
+        
+        print(f"[DEBUG] Found pending request, future done: {pending.response_future.done()}")
         
         # Set the response on the future
         if not pending.response_future.done():
             pending.response_future.set_result(response)
+            print(f"[DEBUG] Response set on future")
+        else:
+            print(f"[WARNING] Future already done for request {response.request_id}")
         
         # Remove from pending
         self.pending_requests.pop(response.request_id, None)
+        print(f"[DEBUG] Request removed from pending")
         return True
 
 
@@ -179,19 +198,36 @@ async def get_next_request(timeout: Optional[float] = 30.0) -> Optional[dict]:
 async def submit_response(request_id: str, response_data: dict) -> dict:
     """Submit response for a request"""
     try:
+        print(f"[DEBUG] Received response for request_id: {request_id}")
+        print(f"[DEBUG] Response data: {response_data}")
+        
         # Ensure request_id is set
         response_data["request_id"] = request_id
-        response = HITLResponse.from_dict(response_data)
+        
+        try:
+            response = HITLResponse.from_dict(response_data)
+            print(f"[DEBUG] Successfully created HITLResponse: {response}")
+        except Exception as e:
+            print(f"[ERROR] Failed to create HITLResponse from dict: {e}")
+            print(f"[ERROR] Response data was: {response_data}")
+            raise
         
         success = await hitl_server.submit_response(response)
         if not success:
+            print(f"[ERROR] Request {request_id} not found or already responded")
             raise HTTPException(
                 status_code=404,
                 detail=f"Request {request_id} not found or already responded"
             )
         
+        print(f"[DEBUG] Response submitted successfully for request_id: {request_id}")
         return {"success": True}
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"[ERROR] Unexpected error in submit_response: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=str(e))
 
 

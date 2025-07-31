@@ -46,13 +46,29 @@ class HITLShell:
         """Send response back to server"""
         async with aiohttp.ClientSession() as session:
             try:
-                async with session.post(
-                    f"{self.server_url}/response/{response.request_id}",
-                    json=response.to_dict()
-                ) as resp:
-                    return resp.status == 200
+                url = f"{self.server_url}/response/{response.request_id}"
+                response_dict = response.to_dict()
+                
+                self.console.print(f"[dim]DEBUG: Sending response to {url}[/dim]")
+                self.console.print(f"[dim]DEBUG: Response data: {response_dict}[/dim]")
+                
+                async with session.post(url, json=response_dict) as resp:
+                    if resp.status == 200:
+                        self.console.print(f"[dim]DEBUG: Response sent successfully (status: {resp.status})[/dim]")
+                        return True
+                    else:
+                        # Read error details
+                        error_text = await resp.text()
+                        self.console.print(f"[red]ERROR: Server returned status {resp.status}[/red]")
+                        self.console.print(f"[red]ERROR: Response body: {error_text}[/red]")
+                        return False
+            except aiohttp.ClientError as e:
+                self.console.print(f"[red]ERROR: Network error sending response: {type(e).__name__}: {e}[/red]")
+                return False
             except Exception as e:
-                self.console.print(f"[red]Error sending response: {e}[/red]")
+                self.console.print(f"[red]ERROR: Unexpected error sending response: {type(e).__name__}: {e}[/red]")
+                import traceback
+                self.console.print(f"[red]{traceback.format_exc()}[/red]")
                 return False
     
     def display_request(self, request: HITLRequest):
@@ -123,17 +139,22 @@ class HITLShell:
                 # Just display notification, no response needed
                 self.console.print("\n[dim]Press Enter to acknowledge...[/dim]")
                 input()
-                response = HITLResponse(request_id=request.id, value=True)
+                # response = HITLResponse(request_id=request.id, value=True)
+                response = None
             
             else:
-                response = HITLResponse(
-                    request_id=request.id,
-                    success=False,
-                    error=f"Unknown request type: {request.type}"
-                )
+                # response = HITLResponse(
+                #     request_id=request.id,
+                #     success=False,
+                #     error=f"Unknown request type: {request.type}"
+                # )
+                response = None
             
             # Send response
-            success = await self.send_response(response)
+            if response is not None:
+                success = await self.send_response(response)
+            else:
+                success = True
             if success:
                 self.console.print("\n[green]✓ Response sent successfully[/green]")
             else:

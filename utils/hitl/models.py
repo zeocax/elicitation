@@ -44,7 +44,12 @@ class HITLRequest:
             data["type"] = RequestType(data["type"])
         if "created_at" in data:
             data["created_at"] = datetime.fromisoformat(data["created_at"])
-        return cls(**data)
+        
+        # Only keep fields that are defined in the dataclass
+        valid_fields = {"id", "type", "prompt", "tool_name", "context", "timeout", "created_at"}
+        filtered_data = {k: v for k, v in data.items() if k in valid_fields}
+        
+        return cls(**filtered_data)
 
 
 @dataclass
@@ -72,7 +77,12 @@ class HITLResponse:
         data = data.copy()
         if "responded_at" in data:
             data["responded_at"] = datetime.fromisoformat(data["responded_at"])
-        return cls(**data)
+        
+        # Only keep fields that are defined in the dataclass
+        valid_fields = {"request_id", "success", "value", "error", "responded_at"}
+        filtered_data = {k: v for k, v in data.items() if k in valid_fields}
+        
+        return cls(**filtered_data)
 
 
 @dataclass
