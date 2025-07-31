@@ -127,6 +127,7 @@ async def audit_architecture_consistency(
         # Extract code from response
         thinking_content = response["thinking_content"]
         audited_code = response["content"]
+        audited_code = re.match(r'```python\n(.*?)\n```', audited_code, re.DOTALL).group(1)
         
         # 输出thinking_content到hitl
         hitl = HITLClient()
