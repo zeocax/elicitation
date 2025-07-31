@@ -47,20 +47,23 @@ AUDIT_ARCHITECTURE_CONSISTENCY_PROMPT = """# 角色
 3.  在新的一行，**抛出异常**以中断执行：'raise NotImplementedError("[与上方注释一致的原因描述]")'。
 
 #### **标记示例**
-假设 "原框架代码" 中是 
+假设 "原框架代码" 中某行代码如下：
 ```python
 self.config.learning_rate = 0.01
 ```
 
-如果 "新框架代码" 是这样（一个**用户自定义**的变量名发生了改变）：
+如果 "新框架代码" 中对应代码是这样的（一个**用户自定义**的变量名发生了改变）：
 ```python
 self.lr = 0.01
 ```
 
-你修改后的输出应该是这样：
+你修改后的这部分代码应该是这样的：
 ```python
 # INCONSISTENT: 变量 'lr' 在原框架代码中为 'self.config.learning_rate'。
+# 不一致的实现：
 # self.lr = 0.01
+# 原框架代码：
+# self.config.learning_rate = 0.01
 raise NotImplementedError("变量 'lr' 在原框架代码中为 'self.config.learning_rate'。")
 ```
 
